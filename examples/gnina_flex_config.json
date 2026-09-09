@@ -1,0 +1,16 @@
+{
+  "input_path": "gnina_best_pose_per_receptor_flex.csv",
+  "tool_name": "GNINA_flex",
+  "sequence_col": "receptor_id",
+  "affinity_col": "minimizedAffinity",
+  "ka_col": "Ka (10^9)",
+  "probability_col": null,
+  "score_direction": "lower_is_better",
+  "poor_ka_threshold": 1.0,
+  "strong_ka_threshold": 7.0,
+  "proposed_cutoff": -11.5,
+  "rescue_cutoff": -11.0,
+  "test_cutoffs": [-9, -10, -11, -11.5, -12],
+  "output_dir": "score_cutoff_analysis_flex",
+  "label_strip": ["e2pico_scfv_", "_M3rd", "_run_1"]
+}

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "affinity-screening"
+version = "0.1.0"
+description = "Screening analysis of predicted binding scores against experimental affinity"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "seaborn",
+    "scipy",
+    "scikit-learn",
+]
+
+[project.urls]
+Homepage = "https://github.com/PrashanthJoseph/Protein_ligand_Data_Analysis"
+
+[project.scripts]
+affinity-screening = "affinity_screening.cli:main"
+
+[tool.setuptools]
+packages = ["affinity_screening"]
