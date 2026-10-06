@@ -1,0 +1,12 @@
+receptor_id,minimizedAffinity,Ka (10^9),CNNscore,experimental_class,passes_proposed_cutoff,screening_decision
+e2pico_scfv_4mut,-11.7641,14.6,0.876301527,Strong (>7),True,High priority
+e2pico_scfv_E4_4,-12.23536,0.086,0.799998403,Poor (<1),True,High priority
+e2pico_scfv_H99L,-12.28425,0.35,0.723543525,Poor (<1),True,High priority
+e2pico_scfv_H99N,-11.44415,0.061,0.815408588,Poor (<1),False,Rescue group
+e2pico_scfv_H99P,-12.16331,0.59,0.807068229,Poor (<1),True,High priority
+e2pico_scfv_m1Q,-11.64278,1.5,0.819445491,Intermediate (1-7),True,High priority
+e2pico_scfv_m2,-11.96843,5.6,0.788859725,Intermediate (1-7),True,High priority
+e2pico_scfv_m3,-10.8431,3.0,0.836212277,Intermediate (1-7),False,Low priority / reject
+e2pico_scfv_m3_b12,-12.33053,4.8,0.814087987,Intermediate (1-7),True,High priority
+e2pico_scfv_m4,-12.53346,7.7,0.849025965,Strong (>7),True,High priority
+e2pico_scfv_m6,-12.2454,21.0,0.956303597,Strong (>7),True,High priority

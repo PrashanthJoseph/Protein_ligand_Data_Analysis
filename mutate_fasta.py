@@ -13,12 +13,25 @@
 
 from __future__ import annotations
 
+import argparse
+import json
 from itertools import combinations, product
 from pathlib import Path
 
 import pandas as pd
 
 AA20 = set("ACDEFGHIKLMNPQRSTVWY")
+
+RECORD_COLUMNS = [
+    "job",
+    "mutant_name",
+    "fasta_header",
+    "num_mutations",
+    "mutations",
+    "chains",
+    "sequence",
+    "fasta_path",
+]
 
 
 # ------------------------------------------------------------
@@ -200,13 +213,28 @@ def generate_job_mutants(
     if not sites:
         raise ValueError(f"No mutable sites resolved for job {header!r}")
 
-    max_mutations = min(max_mutations or len(sites), len(sites))
+    if min_mutations < 0:
+        raise ValueError("min_mutations must be at least 0")
+    if max_mutations is not None and max_mutations < 0:
+        raise ValueError("max_mutations must be at least 0 or None")
+
+    max_mutations = min(
+        len(sites) if max_mutations is None else max_mutations,
+        len(sites),
+    )
+    if min_mutations > max_mutations:
+        raise ValueError(
+            f"min_mutations ({min_mutations}) exceeds max_mutations "
+            f"({max_mutations})"
+        )
+
     multi_chain = len({s["chain_idx"] for s in sites}) > 1
     prefix = name_prefix or header.split()[0]
 
     records, seen = [], set()
 
     if include_wt:
+        seen.add(":".join(chains))
         records.append(
             dict(
                 job=header,
@@ -297,12 +325,12 @@ def generate_mutant_fastas(
                 fh.write(f">{rec['fasta_header']}\n{rec['sequence']}\n")
 
         for rec in records:
-            rec["fasta_path"] = str(out_path)
+            rec["fasta_path"] = out_path.as_posix()
 
         all_records.extend(records)
         print(f"{job_id}: {len(records):5d} mutants -> {out_path}")
 
-    df = pd.DataFrame(all_records)
+    df = pd.DataFrame(all_records, columns=RECORD_COLUMNS)
 
     if manifest:
         manifest_path = out_dir / manifest
@@ -314,45 +342,82 @@ def generate_mutant_fastas(
 
 
 # ------------------------------------------------------------
-# EXAMPLE / CLI
+# CLI
 # ------------------------------------------------------------
 
-if __name__ == "__main__":
+def load_spec_json(path):
+    """Load a JSON mutation spec, converting numeric object keys to integers."""
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Mutation spec must be a JSON object")
 
-    WORKSPACE = r"D:\INITO\myProjects\Estradiol\e2pico_antibodies\Boltzgen\M3rd_workspace"
+    spec = {}
+    for chain, positions in payload.items():
+        if not isinstance(positions, dict):
+            raise ValueError(f"Mutation spec for chain {chain!r} must be an object")
 
-    INPUT_FASTA = WORKSPACE + r"\e2pico_scfv_wt.fasta"     # chain1:chain2 per entry
-    OUT_DIR = WORKSPACE + r"\cdrl3_ALA_muts"
+        chain_key = int(chain) if str(chain).isdigit() else chain
+        spec[chain_key] = {
+            int(position) if str(position).isdigit() else position: residues
+            for position, residues in positions.items()
+        }
 
-    # chain order inside each ":"-joined job entry
-    CHAIN_NAMES = ["VH", "VL"]
+    return spec
 
-    # residue numbering per chain; omit a chain for plain 1-based numbering.
-    #   int  -> number of the chain's first residue
-    #   list -> explicit per-residue numbering
-    NUMBERING = {}
 
-    # {chain: {position: residues}}
-    #   "A"              -> alanine scan
-    #   "AGV" / [...]     -> try each substitution at that position
-    SPEC = {
-        "VL": {
-            89: "A",     # V89
-            90: "A",     # Q90
-            91: "A",     # Y91
-            96: "A",     # Y96
-        },
-    }
-
-    df = generate_mutant_fastas(
-        INPUT_FASTA,
-        SPEC,
-        OUT_DIR,
-        chain_names=CHAIN_NAMES,
-        numbering=NUMBERING,
-        min_mutations=1,
-        max_mutations=None,     # None -> all positions in the spec
-        include_wt=True,
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Generate combinatorial point-mutant FASTAs from a multi-chain FASTA.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
+    parser.add_argument("input_fasta", help="input FASTA; join chains with ':'")
+    parser.add_argument("spec_json", help="JSON mutation specification")
+    parser.add_argument("out_dir", help="output directory")
+    parser.add_argument(
+        "--chain-names",
+        nargs="+",
+        help="chain labels in the same order as the ':'-joined input chains",
+    )
+    parser.add_argument("--min-mutations", type=int, default=1)
+    parser.add_argument("--max-mutations", type=int)
+    parser.add_argument(
+        "--include-wt",
+        action="store_true",
+        help="include the unchanged input parent",
+    )
+    parser.add_argument(
+        "--keep-silent",
+        action="store_true",
+        help="keep choices equal to the parent residue",
+    )
+    parser.add_argument("--suffix", default="_muts.fasta")
+    parser.add_argument("--manifest", default="mutant_manifest.csv")
+    parser.add_argument(
+        "--no-manifest",
+        action="store_true",
+        help="do not write a combined manifest CSV",
+    )
+    return parser.parse_args(argv)
 
-    print(df[["job", "mutant_name", "num_mutations"]].head())
+
+def main(argv=None):
+    args = parse_args(argv)
+    manifest = None if args.no_manifest else args.manifest
+
+    generate_mutant_fastas(
+        args.input_fasta,
+        load_spec_json(args.spec_json),
+        args.out_dir,
+        chain_names=args.chain_names,
+        min_mutations=args.min_mutations,
+        max_mutations=args.max_mutations,
+        skip_silent=not args.keep_silent,
+        include_wt=args.include_wt,
+        suffix=args.suffix,
+        manifest=manifest,
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

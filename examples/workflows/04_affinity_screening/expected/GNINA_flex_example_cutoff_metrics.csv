@@ -1,0 +1,6 @@
+cutoff,total_n,retained_n,rejected_n,total_eliminated_pct,poor_total,poor_retained_n,poor_rejected_n,poor_eliminated_pct,intermediate_total,intermediate_retained_n,intermediate_rejected_n,strong_total,strong_retained_n,strong_rejected_n,strong_retained_pct,rejected_pool_poor_pct,retained_pool_strong_pct
+-10.0,11,11,0,0.0,4,4,0,0.0,4,4,0,3,3,0,100.0,,27.272727272727273
+-11.0,11,10,1,9.090909090909092,4,4,0,0.0,4,3,1,3,3,0,100.0,0.0,30.0
+-11.5,11,9,2,18.181818181818183,4,3,1,25.0,4,3,1,3,3,0,100.0,50.0,33.333333333333336
+-12.0,11,6,5,45.45454545454545,4,3,1,25.0,4,1,3,3,2,1,66.66666666666667,20.0,33.333333333333336
+-12.5,11,1,10,90.9090909090909,4,0,4,100.0,4,0,4,3,1,2,33.333333333333336,40.0,100.0
